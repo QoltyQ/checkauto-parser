@@ -198,4 +198,4 @@ class Parser:
 if __name__ == '__main__':
     print('Parsing Started!')
     p = Parser()
-    p.parse_car('142098205', None, '13 сентября', '/a/show/142098205')
+    p.parse_car('141737998', None, '14 сентября', '/a/show/141737998')
