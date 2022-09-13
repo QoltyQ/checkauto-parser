@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 
 
 Base = declarative_base()
-PSQL_USER = os.environ.get('POSTGRES_USER', 'check_auto')
+PSQL_USER = os.environ.get('POSTGRES_USER', 'postgres')
 PSQL_PASSWORD = os.environ.get('POSTGRES_PASSWORD', 'B6d3k9GA')
 PSQL_HOST = os.environ.get('POSTGRES_HOST', '127.0.0.1')
 PSQL_DB = os.environ.get('POSTGRES_DB', 'kolesa_full')
