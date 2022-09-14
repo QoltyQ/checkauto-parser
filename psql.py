@@ -3,15 +3,20 @@ from sqlalchemy import Column, Integer, String, Text, Date, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
 
+def configure():
+    load_dotenv()
+
+configure()
 
 Base = declarative_base()
-PSQL_USER = os.environ.get('POSTGRES_USER', 'postgres')
-PSQL_PASSWORD = os.environ.get('POSTGRES_PASSWORD', 'B6d3k9GA')
-PSQL_HOST = os.environ.get('POSTGRES_HOST', '127.0.0.1')
-PSQL_DB = os.environ.get('POSTGRES_DB', 'kolesa_full')
-PSQL_PORT = os.environ.get('POSTGRES_PORT', '5432')
 
+PSQL_USER = os.getenv('POSTGRES_USER')
+PSQL_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+PSQL_HOST = os.getenv('POSTGRES_HOST')
+PSQL_DB = os.getenv('POSTGRES_DB')
+PSQL_PORT = os.getenv('POSTGRES_PORT')
 
 def connect_to_psql(user: str, password: str, db_name: str, host: str, port):
     url = f'postgresql://{user}:{password}@{host}:{port}/{db_name}'
