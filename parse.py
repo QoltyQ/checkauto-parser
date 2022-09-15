@@ -14,7 +14,7 @@ def get_date(date_str: str) -> date:
     day_month = date_str.split(' ')
     day = int(day_month[0])
     month = conf.get_month(day_month[1])
-    year = 2020
+    year = 2022
     return date(year, month, day)
 
 
@@ -40,9 +40,7 @@ class Parser:
                                timeout=5)
                 current_proxy = {
                     'http': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}',
-                    # 'https': f'https://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}'
                 }
-                print(current_proxy)
                 self.current_proxy = current_proxy
                 return current_proxy
             except:
@@ -53,7 +51,7 @@ class Parser:
     def make_request(self, url, retries: int = 10):
         while retries > 0:
             try:
-                r = self.s.get(url, timeout=10, proxies=self.get_proxy(), verify=False)
+                r = self.s.get(url, timeout=10, proxies=self.get_proxy(), verify=False, allow_redirects=False)
                 return r
             except requests.RequestException as e:
                 print(f'{e}')
@@ -96,18 +94,24 @@ class Parser:
                 date_of_publication_db = get_date(date_of_publication)
                 views, phone_views = self.parse_views(car_id)
                 status = 1
-                car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year, spec_dict['condition'],
-                          spec_dict['availability'], spec_dict['car_body'],
-                          spec_dict['engine_volume'], spec_dict['mileage'], spec_dict['transmission'],
-                          spec_dict['steering_wheel'], spec_dict['color'], spec_dict['drive'],
-                          spec_dict['customs_cleared'], author, phone, views, phone_views, description, price,
-                          date_of_publication_db, status)
-                print(f'{car_id} added to db')
-                return
+                is_in_database = car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year,
+                                           spec_dict['condition'],
+                                           spec_dict['availability'], spec_dict['car_body'],
+                                           spec_dict['engine_volume'], spec_dict['mileage'], spec_dict['transmission'],
+                                           spec_dict['steering_wheel'], spec_dict['color'], spec_dict['drive'],
+                                           spec_dict['customs_cleared'], author, phone, views, phone_views, description,
+                                           price,
+                                           date_of_publication_db, status)
+                if not is_in_database:
+                    print(f'{car_id} added to db')
+                else:
+                    print(f'{car_id} is already in db')
+                return is_in_database
             except:
                 count_error += 1
-                if count_error > 9:
-                    return
+                if count_error >= 5:
+                    return True
+    
 
     def parse_brand_model(self, div) -> tuple:
         params = div.find_all('li')
@@ -137,16 +141,14 @@ class Parser:
 
     def parse_views(self, car_id: str, retries: int = 10) -> tuple:
         headers = conf.HEADERS
-        headers['referer'] = conf.MAIN_URL + '/a/show/' + car_id
-        headers['path'] = conf.VIEWS_URL + car_id + '/'
         while retries > 0:
             try:
                 r = self.s.get(conf.MAIN_URL + conf.VIEWS_URL + car_id + '/', headers=headers, timeout=20,
                                proxies=self.get_proxy(), verify=False)
                 data = json.loads(r.text)
-                views = int(data['data'][car_id]['nb_views'])
-                phone_views = int(data['data'][car_id]['nb_phone_views'])
-                return views, phone_views
+                phones_views = data['data'][car_id]['nb_phone_views']
+                views = data['data'][car_id]['nb_views']
+                return views, phones_views
             except Exception as e:
                 time.sleep(2)
                 retries -= 1
@@ -164,6 +166,33 @@ class Parser:
                 description += p.text.strip()
                 description += '\n'
         return description
+
+    def parse_generation(self, generation_div):
+        result = ''
+        if not generation_div:
+            return None
+        generation = ''
+        count = 0
+        for div in generation_div:
+            generation = div.find('dd', class_='value')
+            for value in generation:
+                count +=1
+                if count == 2:
+                    result = value
+        return result
+
+    def parse_likes(self, likes_div):
+        result = ''
+        if not likes_div:
+            return None
+        like = ''
+        count = 0
+        for div in likes_div:
+            count +=1
+            print(count, div)
+            if count == 4:
+                result = div
+        return result
 
     def get_author(self, soup):
         author = 'Хозяин'
@@ -198,4 +227,4 @@ class Parser:
 if __name__ == '__main__':
     print('Parsing Started!')
     p = Parser()
-    p.parse_car('132548547', None, '14 сентября', '/a/show/132548547')
+    p.parse_car('141921155', None, '14 сентября', '/a/show/141921155')

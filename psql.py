@@ -34,6 +34,8 @@ class Car(Base):
     brand = Column(String(255))
     model = Column(String(255))
     year = Column(Integer)
+    generation = Column(String(255))
+    likes = Column(Integer)
     condition = Column(String(255))
     availability = Column(String(255))
     car_body = Column(String(255))

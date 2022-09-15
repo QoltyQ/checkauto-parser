@@ -1,26 +1,27 @@
 MAIN_URL = 'https://kolesa.kz'
+MOBILE_URL = 'https://m.kolesa.kz'
 VIEWS_URL = '/ms/views/kolesa/live/'
 PHONE_URL = '/a/ajaxPhones?id='
 ASTANA_URL = '/cars/nur-sultan/?page='
 ALMATY_URL = '/cars/almaty/?page='
-SHYMKENT_URL = '/cars/shymkent/?page='
+KARAGANDA_URL = '/cars/karaganda/?page='
 
 cities_dict = {
     'almaty': (ALMATY_URL, 'Алматы'),
     'astana': (ASTANA_URL, 'Нур-Султан (Астана)'),
-    'shymkent': (SHYMKENT_URL, 'Шымкент')
+    'karaganda': (KARAGANDA_URL, 'Караганда')
 }
 
 HEADERS = {
     'authority': 'kolesa.kz',
     'scheme': 'https',
     'accept': '*/*',
-    'accept-encoding': 'gzip, deflate, br',
-    'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36',
+    # 'accept-encoding': 'gzip, deflate, br',
+    # 'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+    # 'sec-fetch-dest': 'empty',
+    # 'sec-fetch-mode': 'cors',
+    # 'sec-fetch-site': 'same-origin',
+    # 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36',
     'x-requested-with': 'XMLHttpRequest'
 }
 

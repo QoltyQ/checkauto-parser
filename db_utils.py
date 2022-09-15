@@ -6,7 +6,7 @@ session, engine = connect_to_psql(PSQL_USER, PSQL_PASSWORD, PSQL_DB, PSQL_HOST, 
 Base.metadata.create_all(engine)
 
 
-def car_to_db(car_id: str, city: str, advertisement, brand, model, year, condition, availability, car_body,
+def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generation, likes, condition, availability, car_body,
               engine_volume, mileage, transmission, steering_wheel, color, drive, customs_cleared, author, phone, views,
               phone_views, description, price, date_of_publication, status) -> bool:
     db_car = session.query(Car).filter(car_id == Car.id).first()
@@ -19,6 +19,8 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, conditi
         c.brand = brand
         c.model = model
         c.year = year
+        c.generation = generation
+        c.likes = likes
         c.condition = condition
         c.availability = availability
         c.car_body = car_body
@@ -44,6 +46,7 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, conditi
             session.commit()
             return is_in_database  # this car is not in db
         except:
+            print('Houston, we have problems')
             session.rollback()
     else:
         db_car.date_of_editing_in_db = datetime.now()
@@ -52,6 +55,8 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, conditi
         db_car.brand = brand
         db_car.model = model
         db_car.year = year
+        db_car.generation = generation
+        db_car.likes = likes
         db_car.condition = condition
         db_car.availability = availability
         db_car.car_body = car_body

@@ -1,5 +1,9 @@
+from asyncio.windows_events import NULL
+from this import d
 import conf
 import urllib3
+import random
+import time
 import sys
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -13,16 +17,21 @@ class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):
         while True:
             print(f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}')
-            self.cars_links(url, city, start_page)
+            self.mobile_site_infinite(url, city, start_page)
             print(f'[Infinite Parser]: Finished infinite parsing at {str(datetime.now())}')
 
     def cars_links(self, url: str, city: str, start_page: int):
         count_cars_in_db = 0
         page = start_page
         while True:
-            r = self.make_request(conf.MAIN_URL + url + str(page))
+            if page != 1:
+                r = self.make_request(conf.MAIN_URL + url + str(page))
+                rr = self.make_request(conf.MOBILE_URL + url + str(page))
+            else:
+                r = self.make_request(conf.MAIN_URL + '/cars/almaty/')
+                rr = self.make_request(conf.MOBILE_URL + '/cars/almaty/')
             soup = BeautifulSoup(r.text, 'lxml')
-            divs_car = soup.select('div[class*="row vw-item list-item"]')
+            divs_car = soup.select('div[class*="a-list__item"]')
             if not divs_car or (page != 1 and int(soup.find('h1').text.split(' ')[-1]) != page):
                 break
             page += 1
@@ -31,20 +40,90 @@ class InfiniteParser(Parser):
             for div in divs_car:
                 if div is None:
                     break
-                car_id = div.get('data-id')
-                a = div.find('a', class_='list-link ddl_product_link')
-
-                advertisement = get_advertisement(div.attrs['class'])
-
-                date_of_publication = div.find('span', class_='date').text.strip()
-                is_in_database = self.parse_car(car_id, advertisement, date_of_publication, a.get('href'))
+                sec = random.randint(3,6)
+                time.sleep(sec)
+                carId = div.find('div', class_='a-card')
+                if carId is not None:
+                    car_id = carId.get('data-id')
+                else:
+                    continue
+                a = div.find('a', class_='a-card__link')
+                adYellow = div.find('div', class_='a-card--pay-yellow')
+                adBlue = div.find('div', class_='a-card--pay-yellow')
+                if adYellow is not None:
+                    advertisement = 'yellow'
+                if adBlue is not None:
+                    advertisement = 'blue'
+                else: 
+                    advertisement = NULL
+                date_of_publication = div.find('span', class_='a-card__param--date')
+                likes = div.find('span', class_="fi-like")
+                if a is not None and date_of_publication is not None:
+                    is_in_database = self.parse_car(car_id, advertisement, date_of_publication.text, a.get('href'))
                 if is_in_database:
                     count_cars_in_db += 1
                 else:
                     count_cars_in_db = 0
             print('page: ' + str(page))
-
-    def parse_car(self, car_id: str, advertisement, date_of_publication, link: str):
+    
+    def mobile_site_infinite(self, url: str, city: str, start_page: int):
+        count_cars_in_db = 0
+        page = start_page
+        print(page, '------------------------', start_page)
+        while True:
+            if page != 1:
+                r = self.make_request(conf.MOBILE_URL + url + str(page))
+            else:
+                r = self.make_request(conf.MOBILE_URL + '/cars/almaty/')
+            soup = BeautifulSoup(r.text, 'lxml')
+            divs_car = soup.select('div[class*="search-list__item"]')
+            if not divs_car or (page != 1 and int(soup.find('h1').text.split(' ')[-1]) != page):
+                break
+            page += 1
+            if count_cars_in_db >= 100000:
+                return page
+            for div in divs_car:
+                if div is None:
+                    break
+                sec = random.randint(1,3)
+                time.sleep(sec)
+                if div.get('data-id') is not None:    
+                    car_id = div.get('data-id')
+                else: 
+                    continue
+                print(car_id)
+                a = div.find('a', class_='a-card__link')
+                adYellow = div.find('div', class_='a-card--pay-yellow')
+                adBlue = div.find('div', class_='a-card--pay-yellow')
+                if adYellow is not None:
+                    advertisement = 'yellow'
+                if adBlue is not None:
+                    advertisement = 'blue'
+                else: 
+                    advertisement = NULL
+                footer = div.find('div', class_="a-card-footer")
+                likes = self.parse_likes(footer.find_all('span'))
+                print(likes,"likes")
+                if likes:
+                    temp = likes.text.strip()
+                    print(temp)
+                    print(likes.text.strip(), "TEXT")
+                else: 
+                    temp = 0
+                date_of_publication = footer.find('div').text.strip()
+                if a is not None and date_of_publication is not None:
+                    is_in_database = self.parse_car(car_id, advertisement, date_of_publication, a.get('href'), temp)
+                else:
+                    print("noneww",a,"korgw",date_of_publication,)
+                if is_in_database:
+                    count_cars_in_db += 1
+                else:
+                    count_cars_in_db = 0
+            print('page: ' + str(page))
+            start_page = page
+    
+    
+    def parse_car(self, car_id: str, advertisement, date_of_publication, link: str, likes):
         count_error = 0
         while True:
             try:
@@ -59,8 +138,13 @@ class InfiniteParser(Parser):
                 phone = self.get_phone(car_id, referer=link)
                 date_of_publication_db = get_date(date_of_publication)
                 views, phone_views = self.parse_views(car_id)
+                if likes:
+                    likes = int(likes)
+                else:
+                    likes = 0
+                generation = self.parse_generation(soup.find_all('dl'))
                 status = 1
-                is_in_database = car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year,
+                is_in_database = car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year, generation, likes,
                                            spec_dict['condition'],
                                            spec_dict['availability'], spec_dict['car_body'],
                                            spec_dict['engine_volume'], spec_dict['mileage'], spec_dict['transmission'],
