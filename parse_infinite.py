@@ -1,4 +1,3 @@
-from this import d
 import conf
 import urllib3
 import random
