@@ -54,7 +54,7 @@ class Parser:
                 r = self.s.get(url, timeout=10, proxies=self.get_proxy(), verify=False, allow_redirects=False)
                 return r
             except requests.RequestException as e:
-                print(f'{e}')
+                print(f'{e}',flush=True)
                 retries -= 1
                 if retries == 2:
                     retries = 3
@@ -76,7 +76,7 @@ class Parser:
                 date_of_publication = div.find('span', class_='date').text.strip()
                 self.parse_car(car_id, advertisement, date_of_publication, a.get('href'))
             page += 1
-            print('page: ' + str(page))
+            print('page: ' + str(page), flush=True)
 
     def parse_car(self, car_id: str, advertisement, date_of_publication, link: str):
         count_error = 0
@@ -103,9 +103,9 @@ class Parser:
                                            price,
                                            date_of_publication_db, status)
                 if not is_in_database:
-                    print(f'{car_id} added to db')
+                    print(f'{car_id} added to db', flush=True)
                 else:
-                    print(f'{car_id} is already in db')
+                    print(f'{car_id} is already in db', flush=True)
                 return is_in_database
             except:
                 count_error += 1
@@ -153,7 +153,7 @@ class Parser:
                 time.sleep(2)
                 retries -= 1
                 if retries <= 1:
-                    print('Cannot parse views of {}. {}'.format(car_id, e))
+                    print('Cannot parse views of {}. {}'.format(car_id, e), flush=True)
                     return None, None
 
     def parse_description(self, description_div):
@@ -189,7 +189,6 @@ class Parser:
         count = 0
         for div in likes_div:
             count +=1
-            print(count, div)
             if count == 4:
                 result = div
         return result
@@ -225,6 +224,6 @@ class Parser:
                     return None
 
 if __name__ == '__main__':
-    print('Parsing Started!')
+    print('Parsing Started!', flush=True)
     p = Parser()
     p.parse_car('141921155', None, '14 сентября', '/a/show/141921155')

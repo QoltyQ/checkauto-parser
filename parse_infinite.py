@@ -53,7 +53,7 @@ class InfiniteParser(Parser):
                 if adBlue is not None:
                     advertisement = 'blue'
                 else: 
-                    advertisement = NULL
+                    advertisement = 0
                 date_of_publication = div.find('span', class_='a-card__param--date')
                 likes = div.find('span', class_="fi-like")
                 if a is not None and date_of_publication is not None:
