@@ -15,9 +15,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):
         while True:
-            print(f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}')
+            print(f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}',flush=True)
             self.mobile_site_infinite(url, city, start_page)
-            print(f'[Infinite Parser]: Finished infinite parsing at {str(datetime.now())}')
+            print(f'[Infinite Parser]: Finished infinite parsing at {str(datetime.now())}',flush=True)
 
     def cars_links(self, url: str, city: str, start_page: int):
         count_cars_in_db = 0
@@ -63,12 +63,11 @@ class InfiniteParser(Parser):
                     count_cars_in_db += 1
                 else:
                     count_cars_in_db = 0
-            print('page: ' + str(page))
+            print('page: ' + str(page),flush=True)
     
     def mobile_site_infinite(self, url: str, city: str, start_page: int):
         count_cars_in_db = 0
         page = start_page
-        print(page, '------------------------', start_page)
         while True:
             if page != 1:
                 r = self.make_request(conf.MOBILE_URL + url + str(page))
@@ -90,7 +89,6 @@ class InfiniteParser(Parser):
                     car_id = div.get('data-id')
                 else: 
                     continue
-                print(car_id)
                 a = div.find('a', class_='a-card__link')
                 adYellow = div.find('div', class_='a-card--pay-yellow')
                 adBlue = div.find('div', class_='a-card--pay-yellow')
@@ -102,23 +100,18 @@ class InfiniteParser(Parser):
                     advertisement = 0
                 footer = div.find('div', class_="a-card-footer")
                 likes = self.parse_likes(footer.find_all('span'))
-                print(likes,"likes")
                 if likes:
                     temp = likes.text.strip()
-                    print(temp)
-                    print(likes.text.strip(), "TEXT")
                 else: 
                     temp = 0
                 date_of_publication = footer.find('div').text.strip()
                 if a is not None and date_of_publication is not None:
                     is_in_database = self.parse_car(car_id, advertisement, date_of_publication, a.get('href'), temp)
-                else:
-                    print("noneww",a,"korgw",date_of_publication,)
                 if is_in_database:
                     count_cars_in_db += 1
                 else:
                     count_cars_in_db = 0
-            print('page: ' + str(page))
+            print('page: ' + str(page), flush=True)
             start_page = page
     
     
@@ -152,9 +145,9 @@ class InfiniteParser(Parser):
                                            price,
                                            date_of_publication_db, status)
                 if not is_in_database:
-                    print(f'{car_id} added to db')
+                    print(f'{car_id} added to db',flush=True)
                 else:
-                    print(f'{car_id} is already in db')
+                    print(f'{car_id} is already in db',flush=True)
                 return is_in_database
             except:
                 count_error += 1
@@ -163,7 +156,7 @@ class InfiniteParser(Parser):
 
 
 if __name__ == '__main__':
-    print('Parsing Started!')
+    print('Parsing Started!',flush=True)
     p = InfiniteParser()
     city = 'almaty'
     url, name = conf.cities_dict[city]
