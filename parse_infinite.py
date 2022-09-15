@@ -82,7 +82,7 @@ class InfiniteParser(Parser):
             for div in divs_car:
                 if div is None:
                     break
-                sec = random.randint(1,3)
+                sec = random.randint(3,6)
                 time.sleep(sec)
                 if div.get('data-id') is not None:    
                     car_id = div.get('data-id')
