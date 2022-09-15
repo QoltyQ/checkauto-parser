@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 from this import d
 import conf
 import urllib3
@@ -100,7 +99,7 @@ class InfiniteParser(Parser):
                 if adBlue is not None:
                     advertisement = 'blue'
                 else: 
-                    advertisement = NULL
+                    advertisement = 0
                 footer = div.find('div', class_="a-card-footer")
                 likes = self.parse_likes(footer.find_all('span'))
                 print(likes,"likes")
