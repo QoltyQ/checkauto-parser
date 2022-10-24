@@ -69,15 +69,19 @@ class InfiniteParser(Parser):
         page = start_page
         while True:
             if page != 1:
-                r = self.make_request(conf.MOBILE_URL + url + str(page))
+                if page <= 1000:
+                    r = self.make_request(conf.MOBILE_URL + url + str(page))
+                else: 
+                    break
             else:
                 r = self.make_request(conf.MOBILE_URL + '/cars/almaty/')
             soup = BeautifulSoup(r.text, 'lxml')
             divs_car = soup.select('div[class*="search-list__item"]')
             if not divs_car or (page != 1 and int(soup.find('h1').text.split(' ')[-1]) != page):
                 break
+            print('page: ' + str(page), flush=True)
             page += 1
-            if count_cars_in_db >= 100000:
+            if count_cars_in_db >= 50:
                 return page
             for div in divs_car:
                 if div is None:
@@ -110,9 +114,7 @@ class InfiniteParser(Parser):
                     count_cars_in_db += 1
                 else:
                     count_cars_in_db = 0
-            print('page: ' + str(page), flush=True)
             start_page = page
-    
     
     def parse_car(self, car_id: str, advertisement, date_of_publication, link: str, likes):
         count_error = 0
@@ -129,10 +131,7 @@ class InfiniteParser(Parser):
                 phone = self.get_phone(car_id, referer=link)
                 date_of_publication_db = get_date(date_of_publication)
                 views, phone_views = self.parse_views(car_id)
-                if likes:
-                    likes = int(likes)
-                else:
-                    likes = 0
+                likes = likes and int(likes) or 0
                 generation = self.parse_generation(soup.find_all('dl'))
                 status = 1
                 is_in_database = car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year, generation, likes,
