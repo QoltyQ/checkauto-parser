@@ -10,7 +10,7 @@ from parse import Parser, get_date, get_advertisement
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-## ALMATY
+## ASTANA
 
 class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):

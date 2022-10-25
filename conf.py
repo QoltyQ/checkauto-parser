@@ -2,14 +2,14 @@ MAIN_URL = 'https://kolesa.kz'
 MOBILE_URL = 'https://m.kolesa.kz'
 VIEWS_URL = '/ms/views/kolesa/live/'
 PHONE_URL = '/a/ajaxPhones?id='
-ASTANA_URL = '/cars/nur-sultan/?page='
+ASTANA_URL = '/cars/astana/?page='
 ALMATY_URL = '/cars/almaty/?page='
-KARAGANDA_URL = '/cars/karaganda/?page='
+SHYMKENT_URL = '/cars/shymkent/?page='
 
 cities_dict = {
     'almaty': (ALMATY_URL, 'Алматы'),
-    'astana': (ASTANA_URL, 'Нур-Султан (Астана)'),
-    'karaganda': (KARAGANDA_URL, 'Караганда')
+    'astana': (ASTANA_URL, 'Астана'),
+    'karaganda': (SHYMKENT_URL, 'Шымкент')
 }
 
 HEADERS = {
