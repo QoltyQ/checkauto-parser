@@ -9,7 +9,7 @@ SHYMKENT_URL = '/cars/shymkent/?page='
 cities_dict = {
     'almaty': (ALMATY_URL, 'Алматы'),
     'astana': (ASTANA_URL, 'Астана'),
-    'karaganda': (SHYMKENT_URL, 'Шымкент')
+    'shymkent': (SHYMKENT_URL, 'Шымкент')
 }
 
 HEADERS = {
