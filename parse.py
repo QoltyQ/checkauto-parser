@@ -1,5 +1,6 @@
 import requests
 import urllib3
+urllib3.disable_warnings()
 import conf
 from bs4 import BeautifulSoup
 from datetime import date, datetime
@@ -36,12 +37,14 @@ class Parser:
             try:
                 r = self.s.get('https://api.getproxylist.com/proxy?allowsCustomHeaders=1&allowsHttps=1&'
                                '%27%27%27%20%27allowsPost=1&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&%27%27country[]=UA&'
-                               '%27%20%27maxConnectTime=1&minUptime=75&protocol[]=http',
+                               '%27%20%27maxConnectTime=1&minUptime=90&protocol[]=http',
                                timeout=5)
                 current_proxy = {
                     'http': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}',
+                    'https': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}'
                 }
                 self.current_proxy = current_proxy
+                print("Connected to new proxy: ", current_proxy, flush=True)
                 return current_proxy
             except:
                 retries -= 1
@@ -51,13 +54,15 @@ class Parser:
     def make_request(self, url, retries: int = 10):
         while retries > 0:
             try:
-                r = self.s.get(url, timeout=10, proxies=self.get_proxy(), verify=False, allow_redirects=False)
+                r = self.s.get(url, timeout=10, proxies=self.current_proxy, verify=False)
                 return r
             except requests.RequestException as e:
-                print(f'{e}',flush=True)
+                print(f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
+                self.get_proxy()
                 retries -= 1
                 if retries == 2:
                     retries = 3
+
     def cars_links(self, url: str, city: str, start_page: int):
         page = start_page
         while True:
@@ -144,7 +149,7 @@ class Parser:
         while retries > 0:
             try:
                 r = self.s.get(conf.MAIN_URL + conf.VIEWS_URL + car_id + '/', headers=headers, timeout=20,
-                               proxies=self.get_proxy(), verify=False)
+                               proxies=self.PROXY, verify=False)
                 data = json.loads(r.text)
                 phones_views = data['data'][car_id]['nb_phone_views']
                 views = data['data'][car_id]['nb_views']
@@ -182,16 +187,18 @@ class Parser:
         return result
 
     def parse_likes(self, likes_div):
-        result = ''
+        likes = ''
+        views = ''
         if not likes_div:
             return None
-        like = ''
         count = 0
         for div in likes_div:
             count +=1
             if count == 4:
-                result = div
-        return result
+                likes = div
+            if count == 2:
+                views = div
+        return likes,views
 
     def get_author(self, soup):
         author = 'Хозяин'
