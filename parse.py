@@ -44,7 +44,7 @@ class Parser:
                     'https': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}'
                 }
                 self.current_proxy = current_proxy
-                print("Connected to new proxy: ", current_proxy, flush=True)
+                print("Got new proxy: ", current_proxy, flush=True)
                 return current_proxy
             except:
                 retries -= 1
@@ -54,7 +54,8 @@ class Parser:
     def make_request(self, url, retries: int = 10):
         while retries > 0:
             try:
-                r = self.s.get(url, timeout=10, proxies=self.current_proxy, verify=False)
+                r = self.s.get("https://jsonip.com/", timeout=10, proxies=self.current_proxy, verify=False)
+                print(r.json()['ip'])
                 return r
             except requests.RequestException as e:
                 print(f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
