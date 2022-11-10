@@ -54,8 +54,7 @@ class Parser:
     def make_request(self, url, retries: int = 10):
         while retries > 0:
             try:
-                r = self.s.get("https://jsonip.com/", timeout=10, proxies=self.current_proxy, verify=False)
-                print(r.json()['ip'])
+                r = self.s.get(url, timeout=10, proxies=self.current_proxy, verify=False)
                 return r
             except requests.RequestException as e:
                 print(f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
