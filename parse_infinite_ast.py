@@ -10,7 +10,7 @@ from parse import Parser, get_date, get_advertisement
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-## ALMATY
+## ASTANA
 
 class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):
@@ -23,6 +23,7 @@ class InfiniteParser(Parser):
         count_cars_in_db = 0
         page = start_page
         while True:
+            self.get_proxy()
             if page != 1:
                 if page <= 1000:
                     r = self.make_request(conf.MOBILE_URL + url + str(page))
@@ -41,8 +42,6 @@ class InfiniteParser(Parser):
             for div in divs_car:
                 if div is None:
                     break
-                sec = random.randint(3,6)
-                time.sleep(sec)
                 if div.get('data-id') is not None:    
                     car_id = div.get('data-id')
                 else: 
@@ -52,11 +51,12 @@ class InfiniteParser(Parser):
                 adBlue = div.find('div', class_='a-card--pay-yellow')
                 advertisement = 'yellow' if adYellow is not None else'blue' if adBlue is not None else 0 
                 footer = div.find('div', class_="a-card-footer")
-                likes = self.parse_likes(footer.find_all('span'))
+                likes, views = self.parse_likes(footer.find_all('span'))
                 temp = likes and likes.text.strip() or 0
+                tempv = views and views.text.strip() or 0
                 date_of_publication = footer.find('div').text.strip()
                 if a is not None and date_of_publication is not None:
-                    is_in_database = self.parse_car(car_id, advertisement, date_of_publication, a.get('href'), temp)
+                    is_in_database = self.parse_car(car_id, advertisement, date_of_publication, a.get('href'), temp, tempv)
                 if is_in_database:
                     count_cars_in_db += 1
                 else:
@@ -77,7 +77,7 @@ class InfiniteParser(Parser):
                 author = self.get_author(soup)
                 phone = self.get_phone(car_id, referer=link)
                 date_of_publication_db = get_date(date_of_publication)
-                views, phone_views = self.parse_views(car_id)
+                views = views and int(views) or 0
                 likes = likes and int(likes) or 0
                 generation = self.parse_generation(soup.find_all('dl'))
                 status = 1
@@ -86,7 +86,7 @@ class InfiniteParser(Parser):
                                            spec_dict['availability'], spec_dict['car_body'],
                                            spec_dict['engine_volume'], spec_dict['mileage'], spec_dict['transmission'],
                                            spec_dict['steering_wheel'], spec_dict['color'], spec_dict['drive'],
-                                           spec_dict['customs_cleared'], author, phone, views, phone_views, description,
+                                           spec_dict['customs_cleared'], author, phone, views, 0, description,
                                            price,
                                            date_of_publication_db, status)
                 if not is_in_database:

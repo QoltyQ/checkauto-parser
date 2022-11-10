@@ -14,7 +14,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):
-        count = 20
         while True:
             print(f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}',flush=True)
             self.mobile_site_infinite(url, city, start_page)
