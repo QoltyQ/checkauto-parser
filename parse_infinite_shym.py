@@ -63,7 +63,7 @@ class InfiniteParser(Parser):
                     count_cars_in_db = 0
             start_page = page
     
-    def parse_car(self, car_id: str, advertisement, date_of_publication, link: str, likes):
+    def parse_car(self, car_id: str, advertisement, date_of_publication, link: str, likes, views):
         count_error = 0
         while True:
             try:
