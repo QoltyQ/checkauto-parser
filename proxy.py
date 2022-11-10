@@ -9,6 +9,7 @@ def get_proxy(retries: int = 10) -> dict:
                                '%27%27%27%20%27allowsPost=1&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&%27%27country[]=AU&'
                                '%27%20%27maxConnectTime=1&minUptime=90&protocol[]=http',
                                timeout=5)
+                print(r.json())
                 current_proxy = {
                     'http': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}',
                     'https': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}'
