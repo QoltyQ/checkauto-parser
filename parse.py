@@ -35,7 +35,7 @@ class Parser:
     def get_proxy(self, retries: int = 10) -> dict:
         while retries > 0:
             try:
-                r = self.s.get('https://api.getproxylist.com/proxy?apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&protocol[]=http&minUptime=99&maxConnectionTime=1&allowsHttps=1',
+                r = self.s.get('https://api.getproxylist.com/proxy?apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&protocol[]=http&minUptime=35&maxConnectionTime=1&allowsHttps=1',
                                timeout=5)
                 current_proxy = {
                     'http': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}',
