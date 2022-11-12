@@ -16,6 +16,7 @@ class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):
         while True:
             print(f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}',flush=True)
+            self.get_proxy()
             self.mobile_site_infinite(url, city, start_page)
             print(f'[Infinite Parser]: Finished infinite parsing at {str(datetime.now())}',flush=True)
 
@@ -23,7 +24,8 @@ class InfiniteParser(Parser):
         count_cars_in_db = 0
         page = start_page
         while True:
-            self.get_proxy()
+            if page % 5 == 0:
+                self.get_proxy()
             if page != 1:   
                 if page <= 1000:
                     r = self.make_request(conf.MOBILE_URL + url + str(page))

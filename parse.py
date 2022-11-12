@@ -35,9 +35,7 @@ class Parser:
     def get_proxy(self, retries: int = 10) -> dict:
         while retries > 0:
             try:
-                r = self.s.get('https://api.getproxylist.com/proxy?allowsCustomHeaders=1&allowsHttps=1&'
-                               '%27%27%27%20%27allowsPost=1&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&%27%27'
-                               '%27%20%27&protocol[]=http',
+                r = self.s.get('https://api.getproxylist.com/proxy?apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&protocol[]=http&minUptime=99&maxConnectionTime=1&allowsHttps=1',
                                timeout=5)
                 current_proxy = {
                     'http': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}',
@@ -54,14 +52,14 @@ class Parser:
     def make_request(self, url, retries: int = 10):
         while retries > 0:
             try:
-                r = self.s.get(url, timeout=10, proxies=self.current_proxy, verify=False)
+                r = self.s.get(url, timeout=3, proxies=self.current_proxy, verify=False)
                 return r
             except requests.RequestException as e:
                 print(f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
-                self.get_proxy()
                 retries -= 1
-                if retries == 2:
-                    retries = 3
+                if retries == 5:
+                    self.get_proxy()
+                    retries = 10
 
     def cars_links(self, url: str, city: str, start_page: int):
         page = start_page
