@@ -1,8 +1,10 @@
 from psql import connect_to_psql, PSQL_USER, PSQL_PORT, PSQL_HOST, PSQL_DB, PSQL_PASSWORD
 from psql import Base, Car
 from datetime import datetime
+from sqlalchemy import inspect
 
-session, engine = connect_to_psql(PSQL_USER, PSQL_PASSWORD, PSQL_DB, PSQL_HOST, PSQL_PORT)
+session, engine = connect_to_psql(
+    PSQL_USER, PSQL_PASSWORD, PSQL_DB, PSQL_HOST, PSQL_PORT)
 Base.metadata.create_all(engine)
 
 
@@ -83,6 +85,33 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generat
         return is_in_database
 
 
+def create_new_car(car_id: str, city: str, brand, model, price, year, advertisement, likes, views, date) -> bool:
+    db_car = session.query(Car).filter(car_id == Car.id).first()
+    if not db_car:
+        c = Car()
+        c.id = car_id
+        c.city = city
+        c.brand = brand
+        c.model = model
+        c.year = year
+        c.price = price
+        c.views = views
+        c.likes = likes
+        c.advertisement = advertisement
+        c.date_of_publication = date
+        c.date_of_adding_to_db = datetime.now()
+        c.date_of_editing_in_db = datetime.now()
+        try:
+            session.add(c)
+            session.commit()
+            return True  # this car is not in db
+        except Exception as e:
+            print('Houston, we have problems: ', e)
+            session.rollback()
+    else:
+        return False
+
+
 def change_date_of_editing_in_db(car_id) -> bool:
     db_apartment = session.query(Car).filter(car_id == Car.id).first()
     if not db_apartment:
@@ -90,3 +119,12 @@ def change_date_of_editing_in_db(car_id) -> bool:
     db_apartment.date_of_editing_in_db = datetime.now()
     session.commit()
     return True
+
+
+def get_inserted_cars() -> list:
+    db_cars = session.query(Car).filter(Car.brand == None).order_by(
+        Car.date_of_adding_to_db.desc()).limit(500)
+    return db_cars
+
+
+# get_inserted_cars()

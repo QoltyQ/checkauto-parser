@@ -1,12 +1,12 @@
+import json
+import time
+from db_utils import car_to_db
+from datetime import date, datetime
+from bs4 import BeautifulSoup
+import conf
 import requests
 import urllib3
 urllib3.disable_warnings()
-import conf
-from bs4 import BeautifulSoup
-from datetime import date, datetime
-from db_utils import car_to_db
-import time
-import json
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -30,91 +30,35 @@ def get_advertisement(classes):
 class Parser:
     def __init__(self):
         self.s = requests.session()
-        self.current_proxy = None
+        self.proxy = None
 
-    def get_proxy(self, retries: int = 10) -> dict:
+    def get_proxy(self, url, retries: int = 10) -> dict:
         while retries > 0:
-            try:
-                r = self.s.get('https://api.getproxylist.com/proxy?apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&protocol[]=http&minUptime=35&maxConnectionTime=1&allowsHttps=1',
-                               timeout=5)
+            res = self.s.get('https://api.getproxylist.com/proxy?protocol[]=http&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&allowsHttps=1&all=1',
+                             timeout=5)
+            x = res.json()['stats']['count']
+            for i in range(int(x)):
+                r = res.json()[str(i)]
+                ip = r['ip']
+                port = r['port']
                 current_proxy = {
-                    'http': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}',
-                    'https': f'http://{str(r.json().get("ip")) + ":" + str(r.json().get("port"))}'
+                    'http': f'http://{ip}:{port}',
+                    'https': f'http://{ip}:{port}'
                 }
-                self.current_proxy = current_proxy
-                print("Got new proxy: ", current_proxy, flush=True)
-                return current_proxy
-            except:
-                retries -= 1
-                if retries == 1:
-                    retries = 2
-
-    def make_request(self, url, retries: int = 10):
-        while retries > 0:
-            try:
-                r = self.s.get(url, timeout=3, proxies=self.current_proxy, verify=False)
-                return r
-            except requests.RequestException as e:
-                print(f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
-                retries -= 1
-                if retries == 5:
-                    self.get_proxy()
-                    retries = 10
-
-    def cars_links(self, url: str, city: str, start_page: int):
-        page = start_page
-        while True:
-            r = self.make_request(conf.MAIN_URL + url + str(page))
-            soup = BeautifulSoup(r.text, 'lxml')
-            divs_car = soup.select('div[class*="row vw-item list-item"]')
-            if not divs_car or (page != 1 and int(soup.find('h1').text.split(' ')[-1]) != page):
-                break
-            for div in divs_car:
-                if div is None:
-                    break
-                car_id = div.get('data-id')
-                a = div.find('a', class_='list-link ddl_product_link')
-
-                advertisement = get_advertisement(div.attrs['class'])
-                date_of_publication = div.find('span', class_='date').text.strip()
-                self.parse_car(car_id, advertisement, date_of_publication, a.get('href'))
-            page += 1
-            print('page: ' + str(page), flush=True)
-
-    def parse_car(self, car_id: str, advertisement, date_of_publication, link: str):
-        count_error = 0
-        while True:
-            try:
-                r = self.make_request(conf.MAIN_URL + link)
-                soup = BeautifulSoup(r.text, 'lxml')
-                brand, model = self.parse_brand_model(soup.find('div', class_='offer__breadcrumps'))
-                year = int(soup.find('h1', class_='offer__title').find('span', class_='year').text.strip())
-                price = soup.find('div', class_='offer__price').text.strip().replace('\n   ', '')
-                description = self.parse_description(soup.find('div', class_='offer__description'))
-                spec_dict = self.parse_specifications(soup.find('div', class_='offer__parameters'))
-                author = self.get_author(soup)
-                phone = self.get_phone(car_id, referer=link)
-                date_of_publication_db = get_date(date_of_publication)
-                views, phone_views = self.parse_views(car_id)
-                status = 1
-                is_in_database = car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year,
-                                           spec_dict['condition'],
-                                           spec_dict['availability'], spec_dict['car_body'],
-                                           spec_dict['engine_volume'], spec_dict['mileage'], spec_dict['transmission'],
-                                           spec_dict['steering_wheel'], spec_dict['color'], spec_dict['drive'],
-                                           spec_dict['customs_cleared'], author, phone, views, phone_views, description,
-                                           price,
-                                           date_of_publication_db, status)
-                if not is_in_database:
-                    print(f'{car_id} added to db', flush=True)
-                else:
-                    print(f'{car_id} is already in db', flush=True)
-                return is_in_database
-            except:
-                count_error += 1
-                if count_error >= 5:
-                    return True
-    
+                if self.proxy == None:
+                    self.proxy = current_proxy
+                try:
+                    response = self.s.get(
+                        url, timeout=3, proxies=self.proxy, verify=False)
+                    print("Current connected proxy: ", self.proxy, flush=True)
+                    return response
+                except requests.RequestException as e:
+                    self.proxy = None
+                    print(
+                        f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
+                    retries -= 1
+                    if retries == 5:
+                        retries = 10
 
     def parse_brand_model(self, div) -> tuple:
         params = div.find_all('li')
@@ -125,7 +69,8 @@ class Parser:
     def parse_specifications(self, offer_parameters_div):
         spec_dict = conf.get_specifications_dict()
         try:
-            spec_dict['condition'] = offer_parameters_div.find('div', class_='offer__parameters-mortgaged').text.strip()
+            spec_dict['condition'] = offer_parameters_div.find(
+                'div', class_='offer__parameters-mortgaged').text.strip()
         except:
             spec_dict['condition'] = 'На ходу'
         dl_s = offer_parameters_div.find_all('dl')
@@ -146,8 +91,8 @@ class Parser:
         headers = conf.HEADERS
         while retries > 0:
             try:
-                r = self.s.get(conf.MAIN_URL + conf.VIEWS_URL + car_id + '/', headers=headers, timeout=20,
-                               proxies=self.PROXY, verify=False)
+                r = self.get_proxy(conf.MAIN_URL + conf.VIEWS_URL + car_id +
+                                   '/', headers=headers, timeout=20, verify=False)
                 data = json.loads(r.text)
                 phones_views = data['data'][car_id]['nb_phone_views']
                 views = data['data'][car_id]['nb_views']
@@ -156,7 +101,8 @@ class Parser:
                 time.sleep(2)
                 retries -= 1
                 if retries <= 1:
-                    print('Cannot parse views of {}. {}'.format(car_id, e), flush=True)
+                    print('Cannot parse views of {}. {}'.format(
+                        car_id, e), flush=True)
                     return None, None
 
     def parse_description(self, description_div):
@@ -179,7 +125,7 @@ class Parser:
         for div in generation_div:
             generation = div.find('dd', class_='value')
             for value in generation:
-                count +=1
+                count += 1
                 if count == 2:
                     result = value
         return result
@@ -191,19 +137,21 @@ class Parser:
             return None
         count = 0
         for div in likes_div:
-            count +=1
+            count += 1
             if count == 4:
                 likes = div
             if count == 2:
                 views = div
-        return likes,views
+        return likes, views
 
     def get_author(self, soup):
         author = 'Хозяин'
         if soup.find('div', class_='shop__info-container'):
-            author = soup.find('div', class_='shop__info-container').find('a').text.strip()
+            author = soup.find(
+                'div', class_='shop__info-container').find('a').text.strip()
         else:
-            author_text = soup.find('h6', class_='offer__subtitle').text.strip()
+            author_text = soup.find(
+                'h6', class_='offer__subtitle').text.strip()
             if author_text != 'Контакты продавца':
                 author = author_text.replace('Контакты ', '')
         return author
@@ -215,8 +163,8 @@ class Parser:
             headers['referer'] = conf.MAIN_URL + referer
             try:
                 url = conf.MAIN_URL + conf.PHONE_URL + car_id
-                r = self.s.get(url, headers=headers, timeout=20, proxies=self.current_proxy,
-                               verify=False)
+                r = self.get_proxy(url, headers=headers, timeout=20, proxies=self.current_proxy,
+                                   verify=False)
                 phones = r.json()['phones']
                 phones_str = ''
                 for p in phones:
@@ -227,8 +175,3 @@ class Parser:
                 count_error += 1
                 if count_error > 9:
                     return None
-
-if __name__ == '__main__':
-    print('Parsing Started!', flush=True)
-    p = Parser()
-    p.parse_car('141921155', None, '14 сентября', '/a/show/141921155')

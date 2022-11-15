@@ -10,26 +10,27 @@ from parse import Parser, get_date, get_advertisement
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-## ALMATY
+# ALMATY
+
 
 class InfiniteParser(Parser):
     def start_infinite_parsing(self, url: str, city: str, start_page: int):
         while True:
-            print(f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}',flush=True)
+            print(
+                f'[Infinite Parser]: Started infinite parsing at {str(datetime.now())}', flush=True)
             self.get_proxy()
             self.mobile_site_infinite(url, city, start_page)
-            print(f'[Infinite Parser]: Finished infinite parsing at {str(datetime.now())}',flush=True)
+            print(
+                f'[Infinite Parser]: Finished infinite parsing at {str(datetime.now())}', flush=True)
 
     def mobile_site_infinite(self, url: str, city: str, start_page: int):
         count_cars_in_db = 0
         page = start_page
         while True:
-            if page % 5 == 0:
-                self.get_proxy()
-            if page != 1:   
+            if page != 1:
                 if page <= 1000:
                     r = self.make_request(conf.MOBILE_URL + url + str(page))
-                else: 
+                else:
                     break
             else:
                 r = self.make_request(conf.MOBILE_URL + '/cars/almaty/')
@@ -44,38 +45,44 @@ class InfiniteParser(Parser):
             for div in divs_car:
                 if div is None:
                     break
-                if div.get('data-id') is not None:    
+                if div.get('data-id') is not None:
                     car_id = div.get('data-id')
-                else: 
+                else:
                     continue
                 a = div.find('a', class_='a-card__link')
                 adYellow = div.find('div', class_='a-card--pay-yellow')
                 adBlue = div.find('div', class_='a-card--pay-yellow')
-                advertisement = 'yellow' if adYellow is not None else'blue' if adBlue is not None else 0 
+                advertisement = 'yellow' if adYellow is not None else 'blue' if adBlue is not None else 0
                 footer = div.find('div', class_="a-card-footer")
                 likes, views = self.parse_likes(footer.find_all('span'))
                 temp = likes and likes.text.strip() or 0
                 tempv = views and views.text.strip() or 0
                 date_of_publication = footer.find('div').text.strip()
                 if a is not None and date_of_publication is not None:
-                    is_in_database = self.parse_car(car_id, advertisement, date_of_publication, a.get('href'), temp, tempv)
+                    is_in_database = self.parse_car(
+                        car_id, advertisement, date_of_publication, a.get('href'), temp, tempv)
                 if is_in_database:
                     count_cars_in_db += 1
                 else:
                     count_cars_in_db = 0
             start_page = page
-    
+
     def parse_car(self, car_id: str, advertisement, date_of_publication, link: str, likes, views):
         count_error = 0
         while True:
             try:
                 r = self.make_request(conf.MAIN_URL + link)
                 soup = BeautifulSoup(r.text, 'lxml')
-                brand, model = self.parse_brand_model(soup.find('div', class_='offer__breadcrumps'))
-                year = int(soup.find('h1', class_='offer__title').find('span', class_='year').text.strip())
-                price = soup.find('div', class_='offer__price').text.strip().replace('\n   ', '')
-                description = self.parse_description(soup.find('div', class_='offer__description'))
-                spec_dict = self.parse_specifications(soup.find('div', class_='offer__parameters'))
+                brand, model = self.parse_brand_model(
+                    soup.find('div', class_='offer__breadcrumps'))
+                year = int(soup.find('h1', class_='offer__title').find(
+                    'span', class_='year').text.strip())
+                price = soup.find(
+                    'div', class_='offer__price').text.strip().replace('\n   ', '')
+                description = self.parse_description(
+                    soup.find('div', class_='offer__description'))
+                spec_dict = self.parse_specifications(
+                    soup.find('div', class_='offer__parameters'))
                 author = self.get_author(soup)
                 phone = self.get_phone(car_id, referer=link)
                 date_of_publication_db = get_date(date_of_publication)
@@ -92,9 +99,9 @@ class InfiniteParser(Parser):
                                            price,
                                            date_of_publication_db, status)
                 if not is_in_database:
-                    print(f'{car_id} added to db',flush=True)
+                    print(f'{car_id} added to db', flush=True)
                 else:
-                    print(f'{car_id} is already in db',flush=True)
+                    print(f'{car_id} is already in db', flush=True)
                 return is_in_database
             except:
                 count_error += 1
@@ -103,7 +110,7 @@ class InfiniteParser(Parser):
 
 
 if __name__ == '__main__':
-    print('Parsing Started!',flush=True)
+    print('Parsing Started!', flush=True)
     p = InfiniteParser()
     city = 'almaty'
     url, name = conf.cities_dict[city]
