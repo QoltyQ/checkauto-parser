@@ -49,13 +49,13 @@ class Parser:
                     self.proxy = current_proxy
                 try:
                     response = self.s.get(
-                        url, timeout=3, proxies=self.proxy, verify=False)
+                        url, timeout=30, proxies=self.proxy, verify=False)
                     print("Current connected proxy: ", self.proxy, flush=True)
                     return response
                 except requests.RequestException as e:
-                    self.proxy = None
                     print(
-                        f'Got network error while trying to make request to kolesa.kz. Retrying {retries}. {e}', flush=True)
+                        f'Got network error while trying to make request to kolesa.kz by ip {self.proxy}. Retrying {retries}. {e}', flush=True)
+                    self.proxy = None
                     retries -= 1
                     if retries == 5:
                         retries = 10
