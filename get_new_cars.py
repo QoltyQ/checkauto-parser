@@ -39,7 +39,7 @@ class InfiniteParser(Parser):
             print('page: ' + str(page), flush=True)
             page += 1
             if count_cars_in_db >= 50:
-                return page
+                break
             for div in divs_car:
                 if div is None:
                     break
