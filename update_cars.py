@@ -22,7 +22,6 @@ class InfiniteParser(Parser):
             time.sleep(randint(130, 300))
 
     def mobile_site_infinite(self, url: str, city: str):
-        count_cars_in_db = 0
         while True:
             db_cars = get_inserted_cars()
             batch_of_cars = randint(1, 5)
@@ -67,7 +66,7 @@ class InfiniteParser(Parser):
                     print(f'{car_id} is updated', flush=True)
                 return is_in_database
             except Exception as e:
-                print(e)
+                print(car_id, e)
                 count_error += 1
                 if count_error >= 5:
                     return True

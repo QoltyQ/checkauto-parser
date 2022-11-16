@@ -117,7 +117,7 @@ class Parser:
         return description
 
     def parse_generation(self, generation_div):
-        result = ''
+        result = None
         if not generation_div:
             return None
         generation = ''
@@ -128,6 +128,9 @@ class Parser:
                 count += 1
                 if count == 2:
                     result = value
+                    break
+            if result != None:
+                break
         return result
 
     def parse_likes(self, likes_div):
@@ -146,14 +149,6 @@ class Parser:
 
     def get_author(self, soup):
         author = 'Хозяин'
-        if soup.find('div', class_='shop__info-container'):
-            author = soup.find(
-                'div', class_='shop__info-container').find('a').text.strip()
-        else:
-            author_text = soup.find(
-                'h6', class_='offer__subtitle').text.strip()
-            if author_text != 'Контакты продавца':
-                author = author_text.replace('Контакты ', '')
         return author
 
     def get_phone(self, car_id, referer):
