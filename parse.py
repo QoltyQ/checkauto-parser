@@ -1,8 +1,9 @@
 import json
 import time
-from db_utils import car_to_db
+from db_utils import check_ip, save_connection
 from datetime import date, datetime
 from bs4 import BeautifulSoup
+from psql import Proxy
 import conf
 import requests
 import urllib3
@@ -32,7 +33,7 @@ class Parser:
         self.s = requests.session()
         self.proxy = None
 
-    def get_proxy(self, url, retries: int = 10) -> dict:
+    def get_proxy(self, url, id, retries: int = 10) -> dict:
         while retries > 0:
             res = self.s.get('https://api.getproxylist.com/proxy?protocol[]=http&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&allowsHttps=1&all=1',
                              timeout=5)
@@ -41,6 +42,11 @@ class Parser:
                 r = res.json()[str(i)]
                 ip = r['ip']
                 port = r['port']
+                free_ip = check_ip(ip)
+                if free_ip == False:
+                    continue
+                self.ip = ip
+                self.port = port
                 current_proxy = {
                     'http': f'http://{ip}:{port}',
                     'https': f'http://{ip}:{port}'
@@ -50,11 +56,13 @@ class Parser:
                 try:
                     response = self.s.get(
                         url, timeout=30, proxies=self.proxy, verify=False)
-                    print("Current connected proxy: ", self.proxy, flush=True)
+                    print(
+                        f"[{str(datetime.now())}] Current connected proxy: ", self.ip, self.port, flush=True)
+                    save_connection(id, ip, port)
                     return response
                 except requests.RequestException as e:
                     print(
-                        f'Got network error while trying to make request to kolesa.kz by ip {self.proxy}. Retrying {retries}. {e}', flush=True)
+                        f'[{str(datetime.now())}] Got network error while trying to make request to kolesa.kz by ip {self.proxy}. Retrying {retries}. {e}', flush=True)
                     self.proxy = None
                     retries -= 1
                     if retries == 5:
@@ -101,7 +109,7 @@ class Parser:
                 time.sleep(2)
                 retries -= 1
                 if retries <= 1:
-                    print('Cannot parse views of {}. {}'.format(
+                    print(f'[{str(datetime.now())}] Cannot parse views of'.format(
                         car_id, e), flush=True)
                     return None, None
 

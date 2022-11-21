@@ -1,11 +1,31 @@
 from psql import connect_to_psql, PSQL_USER, PSQL_PORT, PSQL_HOST, PSQL_DB, PSQL_PASSWORD
-from psql import Base, Car
+from psql import Base, Car, Proxy
 from datetime import datetime
 from sqlalchemy import inspect
 
 session, engine = connect_to_psql(
     PSQL_USER, PSQL_PASSWORD, PSQL_DB, PSQL_HOST, PSQL_PORT)
 Base.metadata.create_all(engine)
+
+
+def check_ip(ip):
+    in_use = session.query(Proxy).filter(ip == Proxy.ip).first()
+    if in_use:
+        return False
+    return True
+
+
+def save_connection(id: str, ip: str, port: str):
+    p = Proxy()
+    p.id = id
+    p.ip = ip
+    p.port = port
+    try:
+        session.add(p)
+        session.commit()
+    except Exception as e:
+        print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
+        session.rollback()
 
 
 def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generation, likes, condition, availability, car_body,
@@ -47,8 +67,8 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generat
             session.add(c)
             session.commit()
             return is_in_database  # this car is not in db
-        except:
-            print('Houston, we have problems')
+        except Exception as e:
+            print(f'[{str(datetime.now())}] Houston, we have problems ', e)
             session.rollback()
     else:
         db_car.date_of_editing_in_db = datetime.now()
@@ -106,7 +126,7 @@ def create_new_car(car_id: str, city: str, brand, model, price, year, advertisem
             session.commit()
             return True  # this car is not in db
         except Exception as e:
-            print('Houston, we have problems: ', e)
+            print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
             session.rollback()
     else:
         return False
@@ -123,8 +143,11 @@ def change_date_of_editing_in_db(car_id) -> bool:
 
 def get_inserted_cars() -> list:
     db_cars = session.query(Car).filter(Car.brand == None).order_by(
-        Car.date_of_adding_to_db.desc()).limit(500)
+        Car.date_of_adding_to_db.desc())
     return db_cars
 
 
-# get_inserted_cars()
+def get_cars(limit, offset) -> list:
+    db_cars = session.query(Car).order_by(
+        Car.date_of_adding_to_db).limit(limit).offset(offset)
+    return db_cars

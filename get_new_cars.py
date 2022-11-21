@@ -5,7 +5,7 @@ import time
 import sys
 from bs4 import BeautifulSoup
 from datetime import datetime
-from db_utils import create_new_car
+from db_utils import create_new_car, save_connection
 from parse import Parser, get_date
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -27,16 +27,18 @@ class InfiniteParser(Parser):
         while True:
             if page != 1:
                 if page <= 1000:
-                    r = self.get_proxy(conf.MOBILE_URL + url + str(page))
+                    r = self.get_proxy(conf.MOBILE_URL +
+                                       url + str(page), "get_new_cars")
                 else:
                     break
             else:
-                r = self.get_proxy(conf.MOBILE_URL + '/cars/almaty/')
+                r = self.get_proxy(conf.MOBILE_URL +
+                                   '/cars/almaty/', "get_new_cars")
             soup = BeautifulSoup(r.text, 'lxml')
             divs_car = soup.select('div[class*="search-list__item"]')
             if not divs_car or (page != 1 and int(soup.find('h1').text.split(' ')[-1]) != page):
                 break
-            print('page: ' + str(page), flush=True)
+            print(f'[{str(datetime.now())}] page: ' + str(page), flush=True)
             page += 1
             if count_cars_in_db >= 50:
                 break
@@ -70,16 +72,16 @@ class InfiniteParser(Parser):
                     is_new_car_created = create_new_car(
                         car_id, city, None, None, price, year, advertisement, temp, None, date)
                 if not is_new_car_created:
-                    print(f"{car_id} already in db")
+                    print(f"[{str(datetime.now())}] {car_id} already in db")
                 else:
-                    print(f"{car_id} added")
+                    print(f"[{str(datetime.now())}] {car_id} added")
                     count_cars_in_db = 0
             start_page = page
             time.sleep(randint(30, 90))
 
 
 if __name__ == '__main__':
-    print('Parsing Started!', flush=True)
+    print(f'[{str(datetime.now())}] Parsing Started!', flush=True)
     p = InfiniteParser()
     city = 'almaty'
     url, name = conf.cities_dict[city]

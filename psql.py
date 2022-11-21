@@ -5,8 +5,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
+
 def configure():
     load_dotenv()
+
 
 configure()
 
@@ -18,9 +20,17 @@ PSQL_HOST = os.getenv('POSTGRES_HOST')
 PSQL_DB = os.getenv('POSTGRES_DB')
 PSQL_PORT = os.getenv('POSTGRES_PORT')
 
+
 def connect_to_psql(user: str, password: str, db_name: str, host: str, port):
     url = f'postgresql://{user}:{password}@{host}:{port}/{db_name}'
-    engine = create_engine(url, client_encoding='utf-8', connect_args={"options": "-c timezone=Asia/Almaty"})
+    engine = create_engine(url, client_encoding='utf-8', pool_pre_ping=True,
+                           connect_args={
+                               "options": "-c timezone=Asia/Almaty",
+                               "keepalives": 1,
+                               "keepalives_idle": 30,
+                               "keepalives_interval": 10,
+                               "keepalives_count": 5,
+                           })
     db_session = sessionmaker(bind=engine)
     session = db_session()
     return session, engine
@@ -57,3 +67,10 @@ class Car(Base):
     date_of_update = Column(Date)
     status = Column(Integer)
     date_of_editing_in_db = Column(DateTime)
+
+
+class Proxy(Base):
+    __tablename__ = 'proxy_ip'
+    id = Column(String(255), primary_key=True)
+    ip = Column(String(255))
+    port = Column(String(255))
