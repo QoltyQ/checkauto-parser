@@ -112,8 +112,9 @@ class Parser:
         while retries > 0:
             try:
                 r = self.get_proxy(conf.MAIN_URL + conf.VIEWS_URL + car_id +
-                                   '/', headers=headers, timeout=20, verify=False)
+                                   '/', "nb_views")
                 data = json.loads(r.text)
+                print(data)
                 views = data['data'][car_id]['nb_views']
                 return views
             except Exception as e:
@@ -121,7 +122,7 @@ class Parser:
                 retries -= 1
                 if retries <= 1:
                     print(f'[{str(datetime.now())}] Cannot parse views of'.format(
-                        car_id, e), flush=True)
+                        car_id), e, flush=True)
                     return None, None
 
     def parse_description(self, description_div):

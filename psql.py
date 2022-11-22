@@ -27,9 +27,6 @@ def connect_to_psql(user: str, password: str, db_name: str, host: str, port):
                            connect_args={
                                "options": "-c timezone=Asia/Almaty",
                                "keepalives": 1,
-                               "keepalives_idle": 30,
-                               "keepalives_interval": 10,
-                               "keepalives_count": 5,
                            })
     db_session = sessionmaker(bind=engine)
     session = db_session()
