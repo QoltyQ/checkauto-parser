@@ -30,6 +30,8 @@ class InfiniteParser(Parser):
         else:
             limit = sys.argv[1]
             offset = sys.argv[2]
+            print(limit, offset)
+            print(type(limit))
             limit = int(limit)
             offset = int(offset)
             id = f"update_cars_{limit}_{offset}"
