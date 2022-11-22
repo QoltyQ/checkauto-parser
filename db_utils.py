@@ -1,31 +1,54 @@
 from psql import connect_to_psql, PSQL_USER, PSQL_PORT, PSQL_HOST, PSQL_DB, PSQL_PASSWORD
 from psql import Base, Car, Proxy
 from datetime import datetime
+import sys
 from sqlalchemy import inspect
+sys.stdout.flush()
 
 session, engine = connect_to_psql(
     PSQL_USER, PSQL_PASSWORD, PSQL_DB, PSQL_HOST, PSQL_PORT)
 Base.metadata.create_all(engine)
 
 
-def check_ip(ip):
-    in_use = session.query(Proxy).filter(ip == Proxy.ip).first()
+def check_ip(script_id, ip):
+    in_use = session.query(Proxy).filter(Proxy.ip == ip).first()
     if in_use:
-        return False
+        if in_use.id != script_id:
+            return False
     return True
 
 
-def save_connection(id: str, ip: str, port: str):
-    p = Proxy()
-    p.id = id
-    p.ip = ip
-    p.port = port
+def check_ready_ip(script_id):
+    in_use = session.query(Proxy).filter(Proxy.id == script_id).first()
+    if in_use:
+        return in_use.ip, in_use.port
+    else:
+        return None, None
+
+
+def delete_used_ip(script_id):
+    in_use = session.query(Proxy).filter(Proxy.id == script_id)
     try:
-        session.add(p)
+        in_use.delete()
         session.commit()
     except Exception as e:
         print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
         session.rollback()
+
+
+def save_connection(id: str, ip: str, port: str):
+    in_use = session.query(Proxy).filter(Proxy.ip == ip).first()
+    if not in_use:
+        p = Proxy()
+        p.id = id
+        p.ip = ip
+        p.port = port
+        try:
+            session.add(p)
+            session.commit()
+        except Exception as e:
+            print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
+            session.rollback()
 
 
 def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generation, likes, condition, availability, car_body,
@@ -132,6 +155,17 @@ def create_new_car(car_id: str, city: str, brand, model, price, year, advertisem
         return False
 
 
+def delete_notexist_car(car_id):
+    car = session.query(Car).filter(Car.id == car_id)
+    try:
+        car.delete()
+        session.commit()
+        print(f"[{str(datetime.now())}] {car_id} deleted")
+    except Exception as e:
+        print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
+        session.rollback()
+
+
 def change_date_of_editing_in_db(car_id) -> bool:
     db_apartment = session.query(Car).filter(car_id == Car.id).first()
     if not db_apartment:
@@ -144,6 +178,8 @@ def change_date_of_editing_in_db(car_id) -> bool:
 def get_inserted_cars() -> list:
     db_cars = session.query(Car).filter(Car.brand == None).order_by(
         Car.date_of_adding_to_db.desc())
+    # for cars in db_cars:
+    #     print(cars.__dict__)
     return db_cars
 
 
@@ -151,3 +187,6 @@ def get_cars(limit, offset) -> list:
     db_cars = session.query(Car).order_by(
         Car.date_of_adding_to_db).limit(limit).offset(offset)
     return db_cars
+
+
+get_inserted_cars()

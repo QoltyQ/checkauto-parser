@@ -1,12 +1,14 @@
+import urllib3
+import requests
+import conf
+from psql import Proxy
+from bs4 import BeautifulSoup
+from datetime import date, datetime
+from db_utils import check_ip, save_connection, check_ready_ip, delete_used_ip
 import json
 import time
-from db_utils import check_ip, save_connection
-from datetime import date, datetime
-from bs4 import BeautifulSoup
-from psql import Proxy
-import conf
-import requests
-import urllib3
+import sys
+sys.stdout.flush()
 urllib3.disable_warnings()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -32,6 +34,8 @@ class Parser:
     def __init__(self):
         self.s = requests.session()
         self.proxy = None
+        self.ip = None
+        self.port = None
 
     def get_proxy(self, url, id, retries: int = 10) -> dict:
         while retries > 0:
@@ -39,20 +43,25 @@ class Parser:
                              timeout=5)
             x = res.json()['stats']['count']
             for i in range(int(x)):
+                used_ip, used_port = check_ready_ip(id)
                 r = res.json()[str(i)]
-                ip = r['ip']
-                port = r['port']
-                free_ip = check_ip(ip)
-                if free_ip == False:
-                    continue
-                self.ip = ip
-                self.port = port
+                if used_ip and used_port:
+                    ip = used_ip
+                    port = used_port
+                else:
+                    ip = r['ip']
+                    port = r['port']
+                    free_ip = check_ip(id, ip)
+                    if free_ip == False:
+                        continue
                 current_proxy = {
                     'http': f'http://{ip}:{port}',
                     'https': f'http://{ip}:{port}'
                 }
                 if self.proxy == None:
                     self.proxy = current_proxy
+                    self.ip = ip
+                    self.port = port
                 try:
                     response = self.s.get(
                         url, timeout=30, proxies=self.proxy, verify=False)
@@ -61,6 +70,9 @@ class Parser:
                     save_connection(id, ip, port)
                     return response
                 except requests.RequestException as e:
+                    print(self.ip)
+                    if self.ip == used_ip:
+                        delete_used_ip(id)
                     print(
                         f'[{str(datetime.now())}] Got network error while trying to make request to kolesa.kz by ip {self.proxy}. Retrying {retries}. {e}', flush=True)
                     self.proxy = None
@@ -102,9 +114,8 @@ class Parser:
                 r = self.get_proxy(conf.MAIN_URL + conf.VIEWS_URL + car_id +
                                    '/', headers=headers, timeout=20, verify=False)
                 data = json.loads(r.text)
-                phones_views = data['data'][car_id]['nb_phone_views']
                 views = data['data'][car_id]['nb_views']
-                return views, phones_views
+                return views
             except Exception as e:
                 time.sleep(2)
                 retries -= 1

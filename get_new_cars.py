@@ -1,12 +1,13 @@
+from parse import Parser, get_date
+from db_utils import create_new_car, save_connection
+from datetime import datetime
+from bs4 import BeautifulSoup
 import conf
 import urllib3
 from random import randint
 import time
 import sys
-from bs4 import BeautifulSoup
-from datetime import datetime
-from db_utils import create_new_car, save_connection
-from parse import Parser, get_date
+sys.stdout.flush()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

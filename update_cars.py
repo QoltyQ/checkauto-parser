@@ -1,12 +1,13 @@
+from parse import Parser, get_date
+from db_utils import get_inserted_cars, car_to_db, get_cars, delete_notexist_car
+from datetime import datetime
+from bs4 import BeautifulSoup
+import sys
 import conf
 import urllib3
 from random import randint
 import time
-import sys
-from bs4 import BeautifulSoup
-from datetime import datetime
-from db_utils import get_inserted_cars, car_to_db, get_cars
-from parse import Parser, get_date
+sys.stdout.flush()
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -22,32 +23,34 @@ class InfiniteParser(Parser):
             time.sleep(randint(130, 300))
 
     def mobile_site_infinite(self, url: str, city: str):
-        while True:
-            id = ""
-            if len(sys.argv) == 1:
-                id = "update_cars"
-                db_cars = get_inserted_cars()
-            else:
-                limit = sys.argv[1]
-                offset = sys.argv[2]
-                id = f"update_cars_{limit}_{offset}"
-                db_cars = get_cars(limit, offset)
-            batch_of_cars = randint(1, 5)
-            for car in db_cars:
-                car_id = car.id
-                self.parse_car(
-                    car_id, f'/a/show/{car_id}', car.advertisement, car.likes, car.date_of_publication, id)
-                batch_of_cars -= 1
-                if batch_of_cars == 0:
-                    batch_of_cars = randint(1, 5)
-                    time.sleep(randint(3, 10))
-            break
+        id = ""
+        if len(sys.argv) == 1:
+            id = "update_cars"
+            db_cars = get_inserted_cars()
+        else:
+            limit = sys.argv[1]
+            offset = sys.argv[2]
+            id = f"update_cars_{limit}_{offset}"
+            db_cars = get_cars(limit, offset)
+        batch_of_cars = randint(1, 5)
+        for car in db_cars:
+            car_id = car.id
+            self.parse_car(
+                car_id, f'/a/show/{car_id}', car.advertisement, car.likes, car.date_of_publication, id)
+            batch_of_cars -= 1
+            if batch_of_cars == 0:
+                batch_of_cars = randint(1, 5)
+                time.sleep(randint(3, 10))
 
     def parse_car(self, car_id: str, link: str, advertisement, likes, date_of_publication, id):
         count_error = 0
         while True:
             try:
                 r = self.get_proxy(conf.MAIN_URL + link, id)
+                if r.status_code == 404:
+                    print(f"[{str(datetime.now())}] car does not exist")
+                    delete_notexist_car(car_id)
+                    break
                 soup = BeautifulSoup(r.text, 'lxml')
                 brand, model = self.parse_brand_model(
                     soup.find('div', class_='offer__breadcrumps'))
