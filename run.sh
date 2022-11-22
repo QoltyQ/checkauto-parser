@@ -18,5 +18,5 @@ do
    then
       limit=0
    fi
-   nohup python3 update_cars.py limit offset > log/"update_cars_$i".log 2>&1> "update_cars_$i".out &
+   nohup python3 update_cars.py $limit $offset > log/"update_cars_$i".log 2>&1> "update_cars_$i".out &
 done
