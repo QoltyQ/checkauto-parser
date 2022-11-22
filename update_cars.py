@@ -30,6 +30,8 @@ class InfiniteParser(Parser):
         else:
             limit = sys.argv[1]
             offset = sys.argv[2]
+            limit = int(limit)
+            offset = int(offset)
             id = f"update_cars_{limit}_{offset}"
             db_cars = get_cars(limit, offset)
         batch_of_cars = randint(1, 5)
