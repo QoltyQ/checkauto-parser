@@ -24,7 +24,7 @@ PSQL_PORT = os.getenv('POSTGRES_PORT')
 def connect_to_psql(user: str, password: str, db_name: str, host: str, port):
     url = f'postgresql://{user}:{password}@{host}:{port}/{db_name}'
     engine = create_engine(url, client_encoding='utf-8',
-                           pool_pre_ping=True, pool_recycle=3600)
+                           pool_pre_ping=True, pool_recycle=86400)
     db_session = sessionmaker(bind=engine)
     session = db_session()
     return session, engine
