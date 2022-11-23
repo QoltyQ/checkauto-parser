@@ -39,46 +39,52 @@ class Parser:
 
     def get_proxy(self, url, id, retries: int = 10) -> dict:
         while retries > 0:
-            res = self.s.get('https://api.getproxylist.com/proxy?protocol[]=http&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&allowsHttps=1&all=1',
-                             timeout=5)
-            x = res.json()['stats']['count']
-            for i in range(int(x)):
-                used_ip, used_port = check_ready_ip(id)
-                r = res.json()[str(i)]
-                if used_ip and used_port:
-                    ip = used_ip
-                    port = used_port
-                else:
-                    ip = r['ip']
-                    port = r['port']
-                    free_ip = check_ip(id, ip)
-                    if free_ip == False:
-                        continue
-                current_proxy = {
-                    'http': f'http://{ip}:{port}',
-                    'https': f'http://{ip}:{port}'
-                }
-                if self.proxy == None:
-                    self.proxy = current_proxy
-                    self.ip = ip
-                    self.port = port
-                try:
-                    response = self.s.get(
-                        url, timeout=30, proxies=self.proxy, verify=False)
-                    print(
-                        f"[{str(datetime.now())}] Current connected proxy: ", self.ip, self.port, flush=True)
-                    save_connection(id, ip, port)
-                    return response
-                except requests.RequestException as e:
-                    print(self.ip)
-                    if self.ip == used_ip:
-                        delete_used_ip(id)
-                    print(
-                        f'[{str(datetime.now())}] Got network error while trying to make request to kolesa.kz by ip {self.proxy}. Retrying {retries}. {e}', flush=True)
-                    self.proxy = None
-                    retries -= 1
-                    if retries == 5:
-                        retries = 10
+            try:
+                res = self.s.get('https://api.getproxylist.com/proxy?protocol[]=http&apiKey=20cdcf4236a1ba151a60ac1fab0b56fa550341a2&allowsHttps=1&all=1',
+                                 timeout=5)
+                x = res.json()['stats']['count']
+                for i in range(int(x)):
+                    used_ip, used_port = check_ready_ip(id)
+                    r = res.json()[str(i)]
+                    if used_ip and used_port:
+                        ip = used_ip
+                        port = used_port
+                    else:
+                        ip = r['ip']
+                        port = r['port']
+                        free_ip = check_ip(id, ip)
+                        if free_ip == False:
+                            continue
+                    current_proxy = {
+                        'http': f'http://{ip}:{port}',
+                        'https': f'http://{ip}:{port}'
+                    }
+                    if self.proxy == None:
+                        self.proxy = current_proxy
+                        self.ip = ip
+                        self.port = port
+                    try:
+                        response = self.s.get(
+                            url, timeout=30, proxies=self.proxy, verify=False)
+                        print(
+                            f"[{str(datetime.now())}] Current connected proxy: ", self.ip, self.port, flush=True)
+                        save_connection(id, ip, port)
+                        return response
+                    except requests.RequestException as e:
+                        if self.ip == used_ip:
+                            delete_used_ip(id)
+                        print(
+                            f'[{str(datetime.now())}] Got network error while trying to make request to kolesa.kz by ip {self.proxy}. Retrying {retries}. {e}', flush=True)
+                        self.proxy = None
+                        retries -= 1
+                        if retries == 5:
+                            retries = 10
+            except Exception as e:
+                print(
+                    f'[{str(datetime.now())}] Got network error while trying to make request to getproxylist.com. Retrying {retries}. {e}', flush=True)
+                retries -= 1
+                if retries == 5:
+                    retries = 10
 
     def parse_brand_model(self, div) -> tuple:
         params = div.find_all('li')
