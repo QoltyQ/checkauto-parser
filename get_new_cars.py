@@ -57,7 +57,7 @@ class InfiniteParser(Parser):
                 city = div.find(
                     'div', class_="a-card-info__region").text.strip()
                 price = div.find(
-                    'div', class_="a-card-price__primary").text.strip()
+                    'div', class_="a-card-price").text.strip()
                 description = div.find_all(
                     'span', class_="a-card-info__description-item")
                 year = description[0].text.strip()
