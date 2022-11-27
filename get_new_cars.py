@@ -74,6 +74,7 @@ class InfiniteParser(Parser):
                         car_id, city, None, None, price, year, advertisement, temp, None, date)
                 if not is_new_car_created:
                     print(f"[{str(datetime.now())}] {car_id} already in db")
+                    count_cars_in_db += 1
                 else:
                     print(f"[{str(datetime.now())}] {car_id} added")
                     count_cars_in_db = 0
