@@ -68,14 +68,14 @@ class InfiniteParser(Parser):
                 phone = self.get_phone(car_id, referer=link)
                 generation = self.parse_generation(soup.find_all('dl'))
                 views = self.parse_views(car_id)
-                print(views)
                 status = 1
+                print("phone: ", phone)
                 is_in_database = car_to_db(car_id, spec_dict['city'], advertisement, brand, model, year, generation, likes,
                                            spec_dict['condition'],
                                            spec_dict['availability'], spec_dict['car_body'],
                                            spec_dict['engine_volume'], spec_dict['mileage'], spec_dict['transmission'],
                                            spec_dict['steering_wheel'], spec_dict['color'], spec_dict['drive'],
-                                           spec_dict['customs_cleared'], author, phone, 0, 0, description,
+                                           spec_dict['customs_cleared'], author, phone, views, 0, description,
                                            price, date_of_publication, status)
                 if is_in_database:
                     print(

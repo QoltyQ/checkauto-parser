@@ -1,7 +1,8 @@
 MAIN_URL = 'https://kolesa.kz'
+APP_URL = 'https://app.kolesa.kz'
 MOBILE_URL = 'https://m.kolesa.kz'
 VIEWS_URL = '/ms/views/kolesa/live/'
-PHONE_URL = '/a/ajaxPhones?id='
+PHONE_URL = '/adverts/'
 ASTANA_URL = '/cars/astana/?page='
 ALMATY_URL = '/cars/almaty/?page='
 SHYMKENT_URL = '/cars/shymkent/?page='
@@ -13,7 +14,7 @@ cities_dict = {
 }
 
 HEADERS = {
-    'authority': 'kolesa.kz',
+    'host': 'app.kolesa.kz',
     'scheme': 'https',
     'accept': '*/*',
     # 'accept-encoding': 'gzip, deflate, br',
@@ -22,7 +23,8 @@ HEADERS = {
     # 'sec-fetch-mode': 'cors',
     # 'sec-fetch-site': 'same-origin',
     # 'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36',
-    'x-requested-with': 'XMLHttpRequest'
+    # 'x-requested-with': 'XMLHttpRequest',
+    'app-platform': 'frontend'
 }
 
 keys_dict = {

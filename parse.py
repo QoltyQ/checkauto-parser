@@ -120,7 +120,6 @@ class Parser:
                 r = self.get_proxy(conf.MAIN_URL + conf.VIEWS_URL + car_id +
                                    '/', "nb_views")
                 data = json.loads(r.text)
-                print(data)
                 views = data['data'][car_id]['nb_views']
                 return views
             except Exception as e:
@@ -181,11 +180,9 @@ class Parser:
         count_error = 0
         while True:
             headers = conf.HEADERS
-            headers['referer'] = conf.MAIN_URL + referer
             try:
-                url = conf.MAIN_URL + conf.PHONE_URL + car_id
-                r = self.get_proxy(url, headers=headers, timeout=20, proxies=self.current_proxy,
-                                   verify=False)
+                url = conf.APP_URL + conf.PHONE_URL + car_id + '/phones'
+                r = self.s.get(url, headers=headers)
                 phones = r.json()['phones']
                 phones_str = ''
                 for p in phones:
@@ -194,5 +191,5 @@ class Parser:
                 return phones_str
             except:
                 count_error += 1
-                if count_error > 9:
+                if count_error > 0:
                     return None
