@@ -41,7 +41,7 @@ class InfiniteParser(Parser):
                 break
             print(f'[{str(datetime.now())}] page: ' + str(page), flush=True)
             page += 1
-            if count_cars_in_db >= 50:
+            if count_cars_in_db >= 80:
                 break
             for div in divs_car:
                 if div is None:
