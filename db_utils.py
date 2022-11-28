@@ -140,6 +140,7 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generat
                 db_car.status = 3
             else:
                 is_in_database = True  # this car is in db
+                db_car.status = status
             session.commit()
             return is_in_database
     except Exception as e:
