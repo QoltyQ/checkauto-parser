@@ -24,6 +24,8 @@ async def start_handler(message: types.Message):
             print(f"[{str(datetime.utcnow())}]", e)
 
 if __name__ == '__main__':
+    print(f"[{str(datetime.utcnow())}]",
+          "bot has started successfully", flush=True)
     while (True):
         try:
             executor.start_polling(dp)
