@@ -1,12 +1,13 @@
 from aiogram import Bot, Dispatcher, executor, types
 from db_utils import last_hour_cars
 import time
+import os
 from datetime import datetime
 import sys
 sys.stdout.flush()
 
 
-TOKEN = "5875792720:AAGhbhgbEu4sD4qPjr9dIN19WdcMnFcK9pA"
+TOKEN = os.getenv('TOKEN')
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
