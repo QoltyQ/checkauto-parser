@@ -1,6 +1,6 @@
 from psql import connect_to_psql, PSQL_USER, PSQL_PORT, PSQL_HOST, PSQL_DB, PSQL_PASSWORD
 from psql import Base, Car, Proxy
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 from sqlalchemy import inspect
 sys.stdout.flush()
@@ -220,6 +220,16 @@ def get_cars(limit, offset) -> list:
         db_cars = session.query(Car).order_by(
             Car.date_of_adding_to_db).limit(limit).offset(offset)
         return db_cars
+    except Exception as e:
+        print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
+        session.rollback()
+
+
+def last_hour_cars() -> list:
+    try:
+        cars_count = session.query(Car).filter(Car.date_of_adding_to_db >= datetime.utcnow() - timedelta(hours=1, minutes=10)).order_by(
+            Car.date_of_adding_to_db.desc()).count()
+        return cars_count
     except Exception as e:
         print(f'[{str(datetime.now())}] Houston, we have problems: ', e)
         session.rollback()
