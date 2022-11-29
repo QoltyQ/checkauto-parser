@@ -185,8 +185,8 @@ class Parser:
             headers = conf.HEADERS
             try:
                 url = conf.APP_URL + conf.PHONE_URL + car_id + '/phones'
-                r = self.get_proxy(
-                    url, 'nb_phones')
+                r = self.s.get(url, headers=headers, timeout=20, proxies=self.proxy,
+                               verify=False)
                 phones = r.json()['phones']
                 phones_str = ''
                 for p in phones:
