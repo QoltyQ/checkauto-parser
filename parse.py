@@ -66,9 +66,6 @@ class Parser:
                     try:
                         response = self.s.get(
                             url, timeout=30, proxies=self.proxy, verify=False)
-                        if (id == "nb_phones"):
-                            response = self.s.get(
-                                url, timeout=30, proxies=self.proxy, headers=conf.HEADERS, verify=False)
                         print(
                             f"[{str(datetime.now())}] Current connected proxy: ", self.ip, self.port, flush=True)
                         save_connection(id, ip, port)
@@ -183,6 +180,7 @@ class Parser:
         count_error = 0
         while True:
             headers = conf.HEADERS
+            headers['referer'] = conf.MAIN_URL + referer
             try:
                 url = conf.APP_URL + conf.PHONE_URL + car_id + '/phones'
                 r = self.s.get(url, headers=headers, timeout=20,
@@ -195,5 +193,5 @@ class Parser:
                 return phones_str
             except:
                 count_error += 1
-                if count_error > 0:
+                if count_error > 9:
                     return None
