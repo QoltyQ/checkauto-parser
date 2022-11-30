@@ -135,9 +135,6 @@ def car_to_db(car_id: str, city: str, advertisement, brand, model, year, generat
                     (db_car.date_of_update and db_car.date_of_update != date_of_publication):
                 db_car.date_of_update = date_of_publication
                 db_car.status = 3
-            elif (phone == None and views == 0):
-                db_car.date_of_update = date_of_publication
-                db_car.status = 3
             else:
                 is_in_database = True  # this car is in db
                 db_car.status = status
